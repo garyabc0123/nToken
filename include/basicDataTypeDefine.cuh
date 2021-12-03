@@ -15,70 +15,85 @@ struct array{
     T * ptr;
     size_t size;
     size_t cap;
-    array()
-    :size(0), cap(16)
-    {
-        auto err = cudaMallocManaged(reinterpret_cast<void**>(&ptr), sizeof(T) * cap);
-        if(err != cudaSuccess){
-            throw __FILE__ + __LINE__ + __func__ + cudaGetErrorName(err);
-        }
+
+
+    array() {
+        ptr = nullptr;
+        size = 0;
+        cap = 0;
     }
-    array(const T* rightPtr, const size_t count):
-    size(count),
-    cap(count){
-        auto err = cudaMallocManaged(reinterpret_cast<void **>(&ptr), sizeof(T ) * count);
+    array(const T* rightPtr, const size_t count){
+        this->size = count;
+        this->cap = count;
+        auto err = cudaMallocManaged(reinterpret_cast<void **>(&(this->ptr)), sizeof(T ) * count);
         if(err != cudaSuccess){
             throw __FILE__ + std::to_string(__LINE__) + __func__ + cudaGetErrorName(err);
         }
-        size = count;
-        cap = count;
+
     }
-    array(size_t sizeIn, size_t capIn):
-    size(sizeIn),
-    cap(capIn)
-    {
-        auto err = cudaMallocManaged(reinterpret_cast<void**>(&ptr), cap * sizeof(T));
+    array(size_t sizeIn, size_t capIn){
+        this->size = sizeIn;
+        this->cap = capIn;
+        auto err = cudaMallocManaged(reinterpret_cast<void**>(&(this->ptr)), cap * sizeof(T));
         if(err != cudaSuccess){
             throw __FILE__ + std::to_string(__LINE__) + __func__ + cudaGetErrorName(err);
         }
+    }
+
+    array(array const &right){
+        this->size = right.size;
+        this->cap = right.cap;
+        auto err = cudaMallocManaged(reinterpret_cast<void**>(&(this->ptr)), right.cap * sizeof(T));
+        if(err != cudaSuccess){
+            throw __FILE__ + std::to_string(__LINE__) + __func__ + cudaGetErrorName(err);
+        }
+        memcpy(this->ptr, right.ptr, right.size);
     }
 
     ~array(){
-        auto err = cudaFree(reinterpret_cast<void**>(&ptr));
+        if(this->cap == 0){
+            return;
+        }
+        auto err = cudaFree(this->ptr);
         if(err != cudaSuccess){
             throw __FILE__ + std::to_string(__LINE__) + __func__ + cudaGetErrorName(err);
         }
+        this->cap = 0;
+        this->size = 0;
     }
     auto __device__ __host__ operator[](size_t id) -> T&{
-        return  (ptr[id]);
+        return  (this->ptr[id]);
     }
 
     auto __device__ __host__ operator[](size_t id) const -> T{
-        return (ptr[id]);
+        return (this->ptr[id]);
     }
-    auto operator=(const array &right) -> T&{
+    auto __host__ operator=( array const &right) {
+        if(right.size == 0){
+            return ;
+        }
         if (right.size >= cap){
             T * tempPtr;
-            auto err = cudaMallocManaged(reinterpret_cast<void**>(tempPtr), right.cap * sizeof(T));
+            auto err = cudaMallocManaged(reinterpret_cast<void**>(&(tempPtr)), right.cap * sizeof(T));
             if(err != cudaSuccess){
                 throw cudaGetErrorName(err);
             }
-            cudaMemcpy(tempPtr, right.ptr, sizeof(T) * right.size);
+            memcpy(tempPtr, right.ptr, sizeof(T) * right.size);
             cudaFree(ptr);
-            ptr = tempPtr;
-            cap = right.cap;
-            size = right.size;
+            this->ptr = tempPtr;
+            this->cap = right.cap;
+            this->size = right.size;
         } else{
-            cudaMemcpy(ptr, right.ptr, sizeof(T) * right.size);
-            size = right.size;
+            memcpy(ptr, right.ptr, sizeof(T) * right.size);
+            this->size = right.size;
         }
-
+        return  ;
 
     }
-    auto __device__ operator=(const array &right) -> T&{
-        cudaMemcpy(ptr, right.ptr, sizeof(T) * right.size);
-        size = right.size;
-    }
+//    auto __device__  operator=(const array &right) -> T&{
+//        cudaMemcpy(ptr, right.ptr, sizeof(T) * right.size);
+//        size = right.size;
+//    }
 };
 
 
