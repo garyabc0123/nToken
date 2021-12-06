@@ -9,8 +9,10 @@
 #include "basicDataTypeDefine.cuh"
 #include <string>
 #include <sstream>
-
+#include "hyperCompressBoolArray.cuh"
 #include "thrust/universal_vector.h"
+#include <thrust/scan.h>
+#include <thrust/execution_policy.h>
 /**
  *  document token stream structure
  */
@@ -27,9 +29,12 @@ struct documentSentenceNode{
 
 };
 struct documentToken{
-    thrust::universal_vector<wordAndPartOfSpeechPair> token;
-    thrust::universal_vector<documentSentenceNode>  sentence;
-    thrust::universal_vector<charType> word;
+#define DOCUMENTTYPE thrust::universal_vector
+#define DOCUMENTTYPE array
+    DOCUMENTTYPE<wordAndPartOfSpeechPair> token;
+    DOCUMENTTYPE<documentSentenceNode>  sentence;
+    DOCUMENTTYPE<charType> word;
+
 };
 
 auto getDocumentToken(std::wstring &input) -> documentToken;

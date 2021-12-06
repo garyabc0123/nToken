@@ -10,6 +10,7 @@
 using charType = uint32_t;
 using partWordOfSpeechType = uint16_t;
 
+/*
 template <typename T>
 struct array{
     T * ptr;
@@ -95,6 +96,11 @@ struct array{
 //        size = right.size;
 //    }
 };
-
+*/
+template <typename T>
+struct array{
+    T *ptr;
+    size_t size;
+};
 
 #endif //NTOKEN_BASICDATATYPEDEFINE_CUH
