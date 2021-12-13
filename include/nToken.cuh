@@ -9,13 +9,14 @@
 #include "operatorParser.cuh"
 #include "fileReader.cuh"
 #include "documentParser.cuh"
-#include "hyperCompressBoolArray.cuh"
 #include "gpuStack.cuh"
+#include "device_launch_parameters.h"
 
 class nToken {
 public:
     nToken(char * documentPath, char * searchQueryPath);
     void getPosition();
+    void dumpInfo();
 
 private:
     parseTreeInArray * expression;
@@ -24,16 +25,16 @@ private:
     documentToken document;
 };
 
-struct documentTokenPtr{
-    wordAndPartOfSpeechPair* token;
-    size_t tokenSize;
-
-    documentSentenceNode*  sentence;
-    size_t sentenceSize;
-
-    charType* word;
-    size_t wordSize;
-};
+//struct documentTokenPtr{
+//    wordAndPartOfSpeechPair* token;
+//    size_t tokenSize;
+//
+//    documentSentenceNode*  sentence;
+//    size_t sentenceSize;
+//
+//    charType* word;
+//    size_t wordSize;
+//};
 
 
 

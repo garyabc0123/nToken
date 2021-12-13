@@ -17,7 +17,7 @@
  * @param ch
  *
  */
-__global__ void tagChar(array<charType> devInputStr, array<size_t> output, charType ch){
+__global__ void tagChar(array<charType> devInputStr, array<bool> output, charType ch){
     size_t idx = threadIdx.x + blockIdx.x * blockDim.x;
     if(idx >= devInputStr.size)
         return;
@@ -60,7 +60,7 @@ __host__ __device__ void  writeTokenData(array<size_t> scanSpace, array<size_t> 
     }else if(str.ptr[idx] == L'('){
         uint16_t num = 0;
         auto it = idx + 1;
-        while(str.ptr[it] != L')'){
+        while(str.ptr[it] != L')' && it - idx <= 7){
             num *= 10;
             num += str.ptr[it] - L'0';
             it++;
@@ -98,36 +98,33 @@ __global__ void writeTokenData(array<size_t> scanSpace, array<size_t> scanBreak,
 
 }
 
+
+
 /**
  * convert input string to  documentToken
- * @param input
+ * @param device unicode ptr
  * @return documentToken(devive ptr)
  */
-auto getDocumentToken(std::wstring &input) -> documentToken{
-    array<charType> devInput;
-    auto error = cudaMalloc(reinterpret_cast<void **>(&(devInput.ptr)), sizeof(charType) * input.size());
-    devInput.size = input.size();
-    if(error != cudaSuccess){
-        throw __FILE__ + std::to_string(__LINE__) + __func__  + cudaGetErrorName(error)+ "\n";
-    }
-    error = cudaMemcpy(devInput.ptr, input.c_str(), sizeof(charType) * devInput.size, cudaMemcpyHostToDevice);
-    if(error != cudaSuccess){
-        throw __FILE__ + std::to_string(__LINE__) + __func__  + cudaGetErrorName(error)+ "\n";
-    }
+auto getDocumentToken(array<charType> devInput) -> documentToken{
+    std::cout << __FILE__ + std::to_string(__LINE__) + __func__   + "\n";
 
-    array<size_t> isSpace;
-    array<size_t> isBreak;
+    cudaError_t error;
+
+    array<bool> isSpace;
+    array<bool> isBreak;
     isSpace.size = devInput.size;
     isBreak.size = devInput.size;
-    error = cudaMalloc(reinterpret_cast<void **>(&(isSpace.ptr)), isSpace.size * sizeof(size_t));
+    error = cudaMalloc(reinterpret_cast<void **>(&(isSpace.ptr)), isSpace.size * sizeof(bool));
     if(error != cudaSuccess){
         throw __FILE__ + std::to_string(__LINE__) + __func__  + cudaGetErrorName(error)+ "\n";
     }
-    error = cudaMalloc(reinterpret_cast<void **>(&(isBreak.ptr)), isBreak.size * sizeof(size_t));
+    error = cudaMalloc(reinterpret_cast<void **>(&(isBreak.ptr)), isBreak.size * sizeof(bool));
     if(error != cudaSuccess){
         throw __FILE__ + std::to_string(__LINE__) + __func__  + cudaGetErrorName(error)+ "\n";
     }
-
+    thrust::fill(thrust::device, isSpace.ptr, isSpace.ptr + isSpace.size, false);
+    thrust::fill(thrust::device, isBreak.ptr, isBreak.ptr + isBreak.size, false);
+    std::cout << __FILE__ + std::to_string(__LINE__) + __func__  + cudaGetErrorName(error) + "\n";
     tagChar<<<devInput.size / 512 + 1, 512>>>(devInput, isSpace, L' ');
     cudaDeviceSynchronize();
     tagChar<<<devInput.size / 512 + 1, 512>>>(devInput, isBreak, L'\n');
@@ -135,6 +132,7 @@ auto getDocumentToken(std::wstring &input) -> documentToken{
     tagChar<<<devInput.size / 512 + 1, 512>>>(devInput, isSpace, L'\n');
     cudaDeviceSynchronize();
     error = cudaGetLastError();
+    std::cout << __FILE__ + std::to_string(__LINE__) + __func__  + cudaGetErrorName(error) + "\n";
 
     if(error != cudaSuccess){
         throw __FILE__ + std::to_string(__LINE__) + __func__  + cudaGetErrorName(error)+ "\n";
@@ -155,8 +153,9 @@ auto getDocumentToken(std::wstring &input) -> documentToken{
     if(error != cudaSuccess){
         throw __FILE__ + std::to_string(__LINE__) + __func__  + cudaGetErrorName(error)+ "\n";
     }
-    thrust::exclusive_scan(thrust::device, isSpace.ptr, isSpace.ptr + isSpace.size, scanSpace.ptr);
-    thrust::exclusive_scan(thrust::device, isBreak.ptr, isBreak.ptr + isBreak.size, scanBreak.ptr);
+    thrust::exclusive_scan(thrust::device, isSpace.ptr, isSpace.ptr + isSpace.size, scanSpace.ptr, size_t(0));
+    thrust::exclusive_scan(thrust::device, isBreak.ptr, isBreak.ptr + isBreak.size, scanBreak.ptr, size_t(0));
+    std::cout << __FILE__ + std::to_string(__LINE__) + __func__  + cudaGetErrorName(error) + "\n";
 
 
 
@@ -183,28 +182,9 @@ auto getDocumentToken(std::wstring &input) -> documentToken{
     }
 
     writeTokenData<<<devInput.size / 1024 + 1, 1024>>>(scanSpace, scanBreak, devInput, token, document);
-    /*
-    {
-        auto hostScanSpace = scanSpace;
-        auto hostScanBreak = scanBreak;
-        auto hostToken = token;
-        auto hostDocument = document;
-        auto hostInput = devInput;
-        hostScanSpace.ptr = new size_t[hostScanSpace.size];
-        hostScanBreak.ptr = new size_t[hostScanBreak.size];
-        hostInput.ptr = new charType[hostInput.size];
-        hostToken.ptr = new wordAndPartOfSpeechPair[hostToken.size];
-        hostDocument.ptr = new documentSentenceNode[hostDocument.size];
-        cudaMemcpy(hostScanSpace.ptr, scanSpace.ptr, scanSpace.size * sizeof(size_t), cudaMemcpyDeviceToHost);
-        cudaMemcpy(hostScanBreak.ptr, scanBreak.ptr, scanBreak.size * sizeof(size_t), cudaMemcpyDeviceToHost);
-        cudaMemcpy(hostInput.ptr, devInput.ptr, devInput.size * sizeof(charType), cudaMemcpyDeviceToHost);
-        for(auto idx = 0 ; idx < devInput.size ; idx++){
-            writeTokenData(hostScanSpace, hostScanBreak, hostInput, hostToken, hostDocument, idx);
-        }
-
-    }
-    */
     cudaDeviceSynchronize();
+    std::cout << __FILE__ + std::to_string(__LINE__) + __func__  + cudaGetErrorName(error) + "\n";
+
     error = cudaGetLastError();
     if(error != cudaSuccess){
         throw __FILE__ + std::to_string(__LINE__) + __func__  + cudaGetErrorName(error)+ "\n";
@@ -224,7 +204,7 @@ auto getDocumentToken(std::wstring &input) -> documentToken{
             std::wcout << "id: " << hostToken.ptr[it].id << std::endl;
             std::wcout << "pos: " << hostToken.ptr[it].partOfSpeech << std::endl;
             std::wcout << "begin: " << hostToken.ptr[it].begin <<" end: " << hostToken.ptr[it].end << std::endl;
-            std::wcout << input.substr(hostToken.ptr[it].begin, hostToken.ptr[it].end - hostToken.ptr[it].begin) << std::endl;
+            std::wcout << std::wstring(hostToken.ptr[it].begin, hostToken.ptr[it].end - hostToken.ptr[it].begin) << std::endl;
             std::wcout << "@@@@@@@@@@@@\n";
         }
         for(auto it = 0 ; it < document.size ; it++){
@@ -244,8 +224,8 @@ auto getDocumentToken(std::wstring &input) -> documentToken{
     cudaFree(scanSpace.ptr);
     cudaFree(scanBreak.ptr);
     return {
-        token,
-        document,
-        devInput
+            token,
+            document,
+            devInput
     };
 }

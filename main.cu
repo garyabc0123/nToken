@@ -1,13 +1,14 @@
 #include <iostream>
 #include "nToken.cuh"
 int main(int argc, char ** argv) {
-    std::cout << __cplusplus << std::endl;
-    std::cout << (__cplusplus > 201703L) << std::endl;
+    std::wcout.imbue(std::locale{"zh_TW.UTF8"});
+    std::locale::global(std::locale{"zh_TW.UTF8"});
+    std::wcout << __cplusplus << std::endl;
+    std::wcout << (__cplusplus > 201703L) << std::endl;
     try{
-        //nToken(argv[1], argv[2]);
-        gpuUTF8FileReader(argv[1]);
+        nToken(argv[1], argv[2]);
     } catch (std::string e) {
-        std::cout << e << std::endl;
+        std::wcout << std::wstring(e.begin(), e.end()) << std::endl;
     }
 
 
@@ -17,5 +18,5 @@ int main(int argc, char ** argv) {
 }
 
 void func(){
-
+//    std::cout << __FILE__ + std::to_string(__LINE__) + __func__  + cudaGetErrorName(error) + "\n";
 }

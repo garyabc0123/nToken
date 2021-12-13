@@ -62,9 +62,7 @@ auto lecicalAnalyzer(std::wstring input) -> std::vector<symbolTokenStream>{
         if(!buffer.empty()){
             ret.push_back(symbolTokenStream{id, symbolTable::str, std::wstring(buffer.begin(), buffer.end())});
         }
-        for(auto it = ret.begin(); it != ret.end() ; it++){
-            std::wcout << (wchar_t )(it->str[0]) << std::endl;
-        }
+
         //TODO Classification symbol
         for(auto it = ret.begin() ; it != ret.end() ; it++){
             if(it->type == symbolTable::str && it->str.size() == 1){
@@ -178,6 +176,8 @@ auto infixToPrefix(std::vector<symbolTokenStream> input) -> std::vector<symbolTo
     return std::vector<symbolTokenStream>(output.begin(), output.end());
 }
 
+
+
 auto prefixToParseTree(std::vector<symbolTokenStream> &input, size_t begin, size_t size, parseTree * me) -> size_t{
     size_t retNext;
     for(size_t it = begin ; it < begin + size && it < input.size() ; it++){
@@ -217,19 +217,28 @@ auto tokenStream2Tree(std::vector<symbolTokenStream> token) -> parseTree *{
 }
 auto tokenStream2TreeInArray(std::vector<symbolTokenStream> token) -> parseTreeInArray{
     token = infixToPrefix(token);
-    parseTreeInArray ret;
-    ret.nodeListSize = token.size();
-    cudaMallocManaged(reinterpret_cast<void **>(&(ret.nodeList)), sizeof(parseTreeInArrayNode) * token.size());
+
     std::wstring charArray;
+    std::vector<parseTreeInArrayNode> tArray(token.size());
+
     for(size_t i = 0 ; i < token.size() ; i++){
-        ret.nodeList[i].type = token[i].type;
-        ret.nodeList[i].tokenId = token[i].id;
-        ret.nodeList[i].strInArrayBeginId = charArray.size();
+        tArray[i].type = token[i].type;
+        tArray[i].tokenId = token[i].id;
+        tArray[i].strInArrayBeginId = charArray.size();
         if(token[i].type == symbolTable::str){
             charArray += token[i].str;
         }
-        ret.nodeList[i].strInArrayEndId = charArray.size();
+        tArray[i].strInArrayEndId = charArray.size();
     }
+    parseTreeInArray ret;
+    ret.nodeListSize = token.size();
+    cudaMalloc(reinterpret_cast<void **>(&(ret.nodeList)), sizeof(parseTreeInArrayNode) * token.size());
+    cudaMalloc(reinterpret_cast<void **>(&(ret.strArray)), sizeof(charType) * charArray.size());
+    cudaMemcpy(ret.nodeList, tArray.data(), sizeof(parseTreeInArray) * tArray.size(), cudaMemcpyHostToDevice);
+    cudaMemcpy(ret.strArray, charArray.c_str(), sizeof(charType) * charArray.size(), cudaMemcpyHostToDevice);
+    ret.nodeListSize = tArray.size();
+    ret.strArraySize = charArray.size();
+
 
 
     return ret;
@@ -346,7 +355,36 @@ auto __host__ __device__ operatorPriority(symbolTable in) -> int{
         case symbolTable::verticalBar:
                 //|
                 return 7;
-        default:
+        case symbolTable::str:
+        case symbolTable::boolean:
             return 100;
+        case symbolTable::null:
+            return 0;
+        default:
+            return 0;
         }
+}
+
+std::wostream& operator<<(std::wostream& out, const symbolTable value){
+    static std::map<symbolTable, std::string> strings;
+    if (strings.size() == 0){
+
+#define INSERT_ELEMENT(p) strings[p] = #p
+        INSERT_ELEMENT(symbolTable::null);
+        INSERT_ELEMENT(symbolTable::dollarSign);
+        INSERT_ELEMENT(symbolTable::percentSign);
+        INSERT_ELEMENT(symbolTable::verticalBar);
+        INSERT_ELEMENT(symbolTable::exclamationMark);
+        INSERT_ELEMENT(symbolTable::caret);
+        INSERT_ELEMENT(symbolTable::squareBracketLeft);
+        INSERT_ELEMENT(symbolTable::squareBracketRight);
+        INSERT_ELEMENT(symbolTable::curlyBracketLeft);
+        INSERT_ELEMENT(symbolTable::curlyBracketRight);
+        INSERT_ELEMENT(symbolTable::str);
+        INSERT_ELEMENT(symbolTable::boolean);
+
+#undef INSERT_ELEMENT
+    }
+    std::wstring temp(strings[value].begin(), strings[value].end());
+    return out << temp;
 }

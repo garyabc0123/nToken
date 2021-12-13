@@ -1,6 +1,6 @@
 # install gtest
 ```shell
-sudo apt-get install libgtest-dev
+sudo apt-get install libgtest-dev -y
 cd /usr/src/gtest
 sudo cmake CMakeLists.txt
 sudo make

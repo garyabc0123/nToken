@@ -17,21 +17,18 @@ struct gpuStack{
 
 template <typename T>
 __device__ __host__ auto push(gpuStack<T> stack, size_t id, T data){
-    size_t *myTop = &(stack.top[id]);
-    stack.ptr[stack.width * *myTop + id] = data;
-    (*myTop) ++;
+    stack.ptr[stack.width * stack.top[id] + id] = data;
+    stack.top[id] ++;
 }
 template <typename T>
 __device__ __host__ auto pop(gpuStack<T> stack, size_t id) -> T{
-    size_t *myTop = &(stack.top[id]);
-    (*myTop)--;
-    return stack.ptr[stack.width * *myTop + id];
+    stack.top[id]--;
+    return stack.ptr[stack.width * stack.top[id] + id];
 }
 template <typename T>
 __device__ __host__ auto top(gpuStack<T> stack, size_t id) -> T{
-    size_t myTop = stack.top[id];
-    myTop--;
-    return stack.ptr[stack.width * myTop + id];
+
+    return stack.ptr[stack.width * stack.top[id] + id];
 }
 template <typename T>
 __device__ __host__ auto down(gpuStack<T> stack, size_t id) -> T{
@@ -41,7 +38,7 @@ __device__ __host__ auto down(gpuStack<T> stack, size_t id) -> T{
 
 template <typename T>
 __device__ __host__ auto isEmpty(gpuStack<T> stack, size_t id) -> bool{
-    return stack.ptr[id] == 0;
+    return stack.top[id] == 0;
 }
 
 template <typename T>

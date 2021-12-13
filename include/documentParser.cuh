@@ -9,10 +9,10 @@
 #include "basicDataTypeDefine.cuh"
 #include <string>
 #include <sstream>
-#include "hyperCompressBoolArray.cuh"
 #include "thrust/universal_vector.h"
 #include <thrust/scan.h>
 #include <thrust/execution_policy.h>
+#include "device_launch_parameters.h"
 /**
  *  document token stream structure
  */
@@ -37,6 +37,7 @@ struct documentToken{
 
 };
 
-auto getDocumentToken(std::wstring &input) -> documentToken;
+//auto getDocumentToken(std::wstring &input) -> documentToken;
+auto getDocumentToken(array<charType> devInput) -> documentToken;
 
 #endif //NTOKEN_DOCUMENTPARSER_CUH

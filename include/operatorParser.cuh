@@ -14,7 +14,7 @@
 #include <stack>
 #include <algorithm>
 #include <iostream>
-
+#include <map>
 enum struct symbolTable{
     null,
     dollarSign,
@@ -27,8 +27,11 @@ enum struct symbolTable{
     curlyBracketLeft,
     curlyBracketRight,
     str,
+    boolean
 
 };
+std::wostream& operator<<(std::wostream& out, const symbolTable value);
+
 
 struct symbolTokenStream{
     size_t id;
@@ -42,11 +45,7 @@ struct symbolTokenStream{
         }
         return ;
     }
-//    ~symbolTokenStream(){
-//        if(type == symbolTable::str){
-//            str.~array();
-//        }
-//    }
+
 
 };
 
@@ -67,7 +66,7 @@ struct parseTreeInArrayNode{
     size_t tokenId;
     symbolTable type;
     size_t strInArrayBeginId, strInArrayEndId;
-
+    bool data;
 
 };
 struct parseTreeInArray{
@@ -75,7 +74,6 @@ struct parseTreeInArray{
     size_t nodeListSize;
     charType * strArray;
     size_t strArraySize;
-    size_t deep;
 };
 
 

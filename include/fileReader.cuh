@@ -5,13 +5,14 @@
 #ifndef NTOKEN_FILEREADER_CUH
 #define NTOKEN_FILEREADER_CUH
 
-#include <string>
 #include <locale>
 #include <fstream>
+#include <sstream>
 #include <codecvt>
 #include "basicDataTypeDefine.cuh"
 #include "thrust/scan.h"
 #include "thrust/execution_policy.h"
+#include "device_launch_parameters.h"
 
 auto fileReader(char * path) -> std::wstring;
 
