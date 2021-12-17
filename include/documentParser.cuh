@@ -29,7 +29,6 @@ struct documentSentenceNode{
 
 };
 struct documentToken{
-#define DOCUMENTTYPE thrust::universal_vector
 #define DOCUMENTTYPE array
     DOCUMENTTYPE<wordAndPartOfSpeechPair> token;
     DOCUMENTTYPE<documentSentenceNode>  sentence;

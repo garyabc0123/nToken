@@ -13,112 +13,107 @@
 auto lecicalAnalyzer(std::wstring input) -> std::vector<symbolTokenStream>{
 
     std::vector<symbolTokenStream> ret;
-    try{
-//        std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
-//        std::wstring wStr = converter.from_bytes(input);
-        std::deque<wchar_t> buffer;
-        size_t id = 0;
-        for (size_t it = 0; it < input.size() ; it++){
-            switch (input[it]) {
-                case L'\\':
-                    buffer.push_back(input[it + 1]);//TODO have bug ex: \% {}
-                    it++;
-                    break;
-                case L'$':
-                case L'%':
-                case L'|':
-                case L'!':
-                case L'^':
-                case L'[':
-                case L']':
-                case L'{':
-                case L'}':
-                {
-                    if(!buffer.empty()){
-                        ret.push_back(symbolTokenStream{id, symbolTable::str, std::wstring(buffer.begin(), buffer.end())});
-                        id++;
-                        buffer.clear();
-
-                    }
-                    ret.push_back(symbolTokenStream{id, symbolTable::str, std::wstring(&(input[it]), 1)});
+//  std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
+//  std::wstring wStr = converter.from_bytes(input);
+    std::deque<wchar_t> buffer;
+    size_t id = 0;
+    for (size_t it = 0; it < input.size() ; it++){
+        switch (input[it]) {
+            case L'\\':
+                buffer.push_back(input[it + 1]);//TODO have bug ex: \% {}
+                it++;
+                break;
+            case L'$':
+            case L'%':
+            case L'|':
+            case L'!':
+            case L'^':
+            case L'[':
+            case L']':
+            case L'{':
+            case L'}':
+            {
+                if(!buffer.empty()){
+                    ret.push_back(symbolTokenStream{id, symbolTable::str, std::wstring(buffer.begin(), buffer.end())});
                     id++;
-                    break;
+                    buffer.clear();
+
                 }
+                ret.push_back(symbolTokenStream{id, symbolTable::str, std::wstring(&(input[it]), 1)});
+                id++;
+                break;
+            }
 
-                case L' ':
-                case L'\n':
-                case L'\t':
-                    if(!buffer.empty()){
-                        ret.push_back(symbolTokenStream{id, symbolTable::str, std::wstring(buffer.begin(), buffer.end())});
-                        id++;
-                        buffer.clear();
+            case L' ':
+            case L'\n':
+            case L'\t':
+                if(!buffer.empty()){
+                    ret.push_back(symbolTokenStream{id, symbolTable::str, std::wstring(buffer.begin(), buffer.end())});
+                    id++;
+                    buffer.clear();
 
-                    }
+                }
+                break;
+            default:
+                buffer.push_back(input[it]);
+        }
+    };
+    if(!buffer.empty()){
+        ret.push_back(symbolTokenStream{id, symbolTable::str, std::wstring(buffer.begin(), buffer.end())});
+    }
+
+    //TODO Classification symbol
+    for(auto it = ret.begin() ; it != ret.end() ; it++){
+        if(it->type == symbolTable::str && it->str.size() == 1){
+            switch (it->str[0]) {
+                case L'$':
+                    it->type = symbolTable::dollarSign;
+                    it->str.clear();
                     break;
+                case L'%':
+                    it->type = symbolTable::percentSign;
+                    it->str.clear();
+                    break;
+                case L'|':
+                    it->type = symbolTable::verticalBar;
+                    it->str.clear();
+                    break;
+                case L'!':
+                    it->type = symbolTable::exclamationMark;
+                    it->str.clear();
+                    break;
+                case L'^':
+                    it->type = symbolTable::caret;
+                    it->str.clear();
+                    break;
+                case L'[':
+                    it->type = symbolTable::squareBracketLeft;
+                    it->str.clear();
+                    break;
+                case L']':
+                    it->type = symbolTable::squareBracketRight;
+                    it->str.clear();
+                    break;
+                case L'{':
+                    it->type = symbolTable::curlyBracketLeft;
+                    it->str.clear();
+                    break;
+                case L'}':
+                    it->type = symbolTable::curlyBracketRight;
+                    it->str.clear();
                 default:
-                    buffer.push_back(input[it]);
+                    //do nothing
+                    break;
             }
-        };
-        if(!buffer.empty()){
-            ret.push_back(symbolTokenStream{id, symbolTable::str, std::wstring(buffer.begin(), buffer.end())});
-        }
 
-        //TODO Classification symbol
-        for(auto it = ret.begin() ; it != ret.end() ; it++){
-            if(it->type == symbolTable::str && it->str.size() == 1){
-                switch (it->str[0]) {
-                    case L'$':
-                        it->type = symbolTable::dollarSign;
-                        it->str.clear();
-                        break;
-                    case L'%':
-                        it->type = symbolTable::percentSign;
-                        it->str.clear();
-                        break;
-                    case L'|':
-                        it->type = symbolTable::verticalBar;
-                        it->str.clear();
-                        break;
-                    case L'!':
-                        it->type = symbolTable::exclamationMark;
-                        it->str.clear();
-                        break;
-                    case L'^':
-                        it->type = symbolTable::caret;
-                        it->str.clear();
-                        break;
-                    case L'[':
-                        it->type = symbolTable::squareBracketLeft;
-                        it->str.clear();
-                        break;
-                    case L']':
-                        it->type = symbolTable::squareBracketRight;
-                        it->str.clear();
-                        break;
-                    case L'{':
-                        it->type = symbolTable::curlyBracketLeft;
-                        it->str.clear();
-                        break;
-                    case L'}':
-                        it->type = symbolTable::curlyBracketRight;
-                        it->str.clear();
-                    default:
-                        //do nothing
-                        break;
-                }
-
-
-            }
 
         }
 
-    }catch (const char * message){
-        throw __FILE__ + std::to_string(__LINE__) + __func__ + "\n" + std::string(message);
     }
     return ret;
 
 }
-
+#ifdef NOONOD
 auto infixToPrefix(std::vector<symbolTokenStream> input) -> std::vector<symbolTokenStream>{
     std::stack<symbolTokenStream> stack;
     std::deque<symbolTokenStream> output;
@@ -175,7 +170,50 @@ auto infixToPrefix(std::vector<symbolTokenStream> input) -> std::vector<symbolTo
     }
     return std::vector<symbolTokenStream>(output.begin(), output.end());
 }
+#endif
+auto infixToPrefix(std::vector<symbolTokenStream> input) -> std::vector<symbolTokenStream>{
+    std::stack<symbolTokenStream> stack;
+    std::deque<symbolTokenStream> output;
+    for(size_t it = input.size() - 1; it != -1 ; it--){
+        switch (input[it].type) {
+            case symbolTable::curlyBracketRight:
+                stack.push(input[it]);
+                break;
+            case symbolTable::curlyBracketLeft:
+                while(!stack.empty()){
+                    if(stack.top().type == symbolTable::curlyBracketRight){
+                        stack.pop();
+                        break;
+                    }
+                    output.push_back(stack.top());
+                    stack.pop();
+                }
+            default:
+            {
+                if(operatorPriority(input[it].type) < 100){
+                    while(!stack.empty()){
+                        if(stack.top().type == symbolTable::curlyBracketRight || operatorPriority(input[it].type) <
+                                                                                         operatorPriority(stack.top().type)){
+                            break;
+                        }
+                        output.push_back(stack.top());
+                        stack.pop();
+                    }
+                    stack.push(input[it]);
+                }else{
+                    output.push_back(input[it]);
+                }
+            }
+        }
+    }
 
+    while(!stack.empty()){
+        output.push_back(stack.top());
+        stack.pop();
+    }
+    std::reverse(output.begin(), output.end());
+    return std::vector(output.begin(), output.end());
+}
 
 
 auto prefixToParseTree(std::vector<symbolTokenStream> &input, size_t begin, size_t size, parseTree * me) -> size_t{
@@ -231,11 +269,10 @@ auto tokenStream2TreeInArray(std::vector<symbolTokenStream> token) -> parseTreeI
         tArray[i].strInArrayEndId = charArray.size();
     }
     parseTreeInArray ret;
-    ret.nodeListSize = token.size();
-    cudaMalloc(reinterpret_cast<void **>(&(ret.nodeList)), sizeof(parseTreeInArrayNode) * token.size());
-    cudaMalloc(reinterpret_cast<void **>(&(ret.strArray)), sizeof(charType) * charArray.size());
-    cudaMemcpy(ret.nodeList, tArray.data(), sizeof(parseTreeInArray) * tArray.size(), cudaMemcpyHostToDevice);
-    cudaMemcpy(ret.strArray, charArray.c_str(), sizeof(charType) * charArray.size(), cudaMemcpyHostToDevice);
+    cudaMallocManaged(reinterpret_cast<void **>(&(ret.nodeList)), sizeof(parseTreeInArrayNode) * token.size());
+    cudaMallocManaged(reinterpret_cast<void **>(&(ret.strArray)), sizeof(charType) * charArray.size());
+    memcpy(ret.nodeList, tArray.data(), sizeof(parseTreeInArrayNode) * tArray.size());
+    memcpy(ret.strArray, charArray.c_str(), sizeof(charType) * charArray.size());
     ret.nodeListSize = tArray.size();
     ret.strArraySize = charArray.size();
 
@@ -261,76 +298,71 @@ auto syntaxDirectedTranslator(std::vector<symbolTokenStream> token) -> std::tupl
     std::vector<parseTreeInArray > computeTupleTree;
     std::vector<size_t> dist;
 
-    try{
-        for(size_t it = 0 ; it < token.size() ; it++){
-            switch (nowState){
-                case 0:
-                    if(token[it].type == symbolTable::curlyBracketLeft){
-                        curlyBegin = it;
-                        nowState++;
-                        stack.push(symbolTable::curlyBracketLeft);
-                    }
-                    break;
-                case 1:
-                    if(token[it].type == symbolTable::curlyBracketLeft){
-                        stack.push(symbolTable::curlyBracketLeft);
-                    }else if(token[it].type == symbolTable::curlyBracketRight){
+    for(size_t it = 0 ; it < token.size() ; it++){
+        switch (nowState){
+            case 0:
+                if(token[it].type == symbolTable::curlyBracketLeft){
+                    curlyBegin = it;
+                    nowState++;
+                    stack.push(symbolTable::curlyBracketLeft);
+                }
+                break;
+            case 1:
+                if(token[it].type == symbolTable::curlyBracketLeft){
+                    stack.push(symbolTable::curlyBracketLeft);
+                }else if(token[it].type == symbolTable::curlyBracketRight){
+                    if(stack.empty()){
+                        throw "Synatex Error, loss {";
+                    }else{
+                        stack.pop();
                         if(stack.empty()){
-                            throw "Synatex Error, loss {";
-                        }else{
-                            stack.pop();
-                            if(stack.empty()){
-                                curlyEnd = it;
-                                nowState++;
-                            }
+                            curlyEnd = it;
+                            nowState++;
                         }
                     }
-                    break;
-                case 2:
-                    if(token[it].type == symbolTable::squareBracketLeft){
-                        squarBegin = it;
-                        nowState++;
-                    }
-                    break;
-                case 3:
-                    if(token[it].type == symbolTable::squareBracketRight){
-                        squareEnd = it;
-                        nowState = 0;
-                        auto computeTree = tokenStream2TreeInArray(std::vector<symbolTokenStream>(token.begin()+curlyBegin+1, token.begin()+curlyEnd));
-                        std::wstring distStr(token[squarBegin + 1].str);
-                        size_t distThis = std::stoi(distStr);
-                        dist.push_back(distThis);
-                        computeTupleTree.push_back(computeTree);
-                    }
-            }
-
-
+                }
+                break;
+            case 2:
+                if(token[it].type == symbolTable::squareBracketLeft){
+                    squarBegin = it;
+                    nowState++;
+                }
+                break;
+            case 3:
+                if(token[it].type == symbolTable::squareBracketRight){
+                    squareEnd = it;
+                    nowState = 0;
+                    auto computeTree = tokenStream2TreeInArray(std::vector<symbolTokenStream>(token.begin()+curlyBegin+1, token.begin()+curlyEnd));
+                    std::wstring distStr(token[squarBegin + 1].str);
+                    size_t distThis = std::stoi(distStr);
+                    dist.push_back(distThis);
+                    computeTupleTree.push_back(computeTree);
+                }
         }
-        parseTreeInArray * tempComputeTupleTree ;//= new parseTree*[computeTupleTree.size()];
-        cudaMallocManaged(reinterpret_cast<void **>(&tempComputeTupleTree), sizeof(parseTreeInArray) * computeTupleTree.size());
-        distList tempDistList;// = new size_t[computeTupleTree.size()];
-        cudaMallocManaged(reinterpret_cast<void **>(&tempDistList), sizeof(size_t) * computeTupleTree.size());
-        std::copy(computeTupleTree.begin(), computeTupleTree.end(), tempComputeTupleTree);
-        std::copy(dist.begin(), dist.end(), tempDistList);
-        return std::tuple<parseTreeInArray *, distList, size_t >{tempComputeTupleTree, tempDistList, computeTupleTree.size()};
+
 
     }
-    catch (const char * message){
-        throw __FILE__ + std::to_string(__LINE__) + __func__ + "\n" + std::string(message);
+    parseTreeInArray * tempComputeTupleTree ;//= new parseTree*[computeTupleTree.size()];
+    cudaError_t error;
+    error = cudaMallocManaged(reinterpret_cast<void **>(&tempComputeTupleTree), sizeof(parseTreeInArray) * computeTupleTree.size());
+    if(error != cudaSuccess){
+        throw __FILE__ + std::to_string(__LINE__) + __func__  + cudaGetErrorName(error)+ "\n";
     }
+    distList tempDistList;// = new size_t[computeTupleTree.size()];
+    error = cudaMallocManaged(reinterpret_cast<void **>(&tempDistList), sizeof(size_t) * computeTupleTree.size());
+    if(error != cudaSuccess){
+        throw __FILE__ + std::to_string(__LINE__) + __func__  + cudaGetErrorName(error)+ "\n";
+    }
+    std::copy(computeTupleTree.begin(), computeTupleTree.end(), tempComputeTupleTree);
+    std::copy(dist.begin(), dist.end(), tempDistList);
+    return std::tuple<parseTreeInArray *, distList, size_t >{tempComputeTupleTree, tempDistList, computeTupleTree.size()};
 
 }
 
 
 auto compiler(std::wstring searchKey) -> std::tuple<parseTreeInArray *, distList, size_t >{
-    try{
-        auto token = lecicalAnalyzer(searchKey);
-
-
-        return syntaxDirectedTranslator(token);
-    }catch (const char * message){
-        throw __FILE__ + std::to_string(__LINE__) + __func__ + "\n" + std::string(message);
-    }
+    auto token = lecicalAnalyzer(searchKey);
+    return syntaxDirectedTranslator(token);
 
 }
 

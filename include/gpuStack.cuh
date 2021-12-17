@@ -23,12 +23,12 @@ __device__ __host__ auto push(gpuStack<T> stack, size_t id, T data){
 template <typename T>
 __device__ __host__ auto pop(gpuStack<T> stack, size_t id) -> T{
     stack.top[id]--;
-    return stack.ptr[stack.width * stack.top[id] + id];
+    return stack.ptr[stack.width * (stack.top[id] )+ id];
 }
 template <typename T>
 __device__ __host__ auto top(gpuStack<T> stack, size_t id) -> T{
 
-    return stack.ptr[stack.width * stack.top[id] + id];
+    return stack.ptr[stack.width * (stack.top[id]  - 1) + id];
 }
 template <typename T>
 __device__ __host__ auto down(gpuStack<T> stack, size_t id) -> T{

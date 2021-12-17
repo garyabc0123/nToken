@@ -21,7 +21,7 @@ __global__ void tagChar(array<charType> devInputStr, array<bool> output, charTyp
     size_t idx = threadIdx.x + blockIdx.x * blockDim.x;
     if(idx >= devInputStr.size)
         return;
-    if(devInputStr.ptr[idx] == ch){
+    if(devInputStr.ptr[idx] == ch  ){
         output.ptr[idx] = true;
     }
 }
@@ -48,6 +48,8 @@ __host__ __device__ void  writeTokenData(array<size_t> scanSpace, array<size_t> 
             //和左邊的不一樣
             token.ptr[myTokenId].begin = idx;
             token.ptr[myTokenId].id = myTokenId;
+            while(str.ptr[idx] == L' ')
+                token.ptr[myTokenId].begin++; //當遇到連續兩個空白或兩個換行
 
         }
         if(scanSpace.ptr[idx] != scanSpace.ptr[idx + 1]){
@@ -98,6 +100,15 @@ __global__ void writeTokenData(array<size_t> scanSpace, array<size_t> scanBreak,
 
 }
 
+__global__ void ifContinuous(array<bool> arr){
+    size_t idx = threadIdx.x + blockIdx.x * blockDim.x;
+    if(idx >= arr.size)
+        return;
+    if(idx == 0)
+        return;
+    if(arr.ptr[idx] && arr.ptr[idx - 1])
+        arr.ptr[idx] = false;
+}
 
 
 /**
@@ -114,11 +125,11 @@ auto getDocumentToken(array<charType> devInput) -> documentToken{
     array<bool> isBreak;
     isSpace.size = devInput.size;
     isBreak.size = devInput.size;
-    error = cudaMalloc(reinterpret_cast<void **>(&(isSpace.ptr)), isSpace.size * sizeof(bool));
+    error = cudaMallocManaged(reinterpret_cast<void **>(&(isSpace.ptr)), isSpace.size * sizeof(bool));
     if(error != cudaSuccess){
         throw __FILE__ + std::to_string(__LINE__) + __func__  + cudaGetErrorName(error)+ "\n";
     }
-    error = cudaMalloc(reinterpret_cast<void **>(&(isBreak.ptr)), isBreak.size * sizeof(bool));
+    error = cudaMallocManaged(reinterpret_cast<void **>(&(isBreak.ptr)), isBreak.size * sizeof(bool));
     if(error != cudaSuccess){
         throw __FILE__ + std::to_string(__LINE__) + __func__  + cudaGetErrorName(error)+ "\n";
     }
@@ -131,6 +142,9 @@ auto getDocumentToken(array<charType> devInput) -> documentToken{
     cudaDeviceSynchronize();
     tagChar<<<devInput.size / 512 + 1, 512>>>(devInput, isSpace, L'\n');
     cudaDeviceSynchronize();
+    ifContinuous<<<devInput.size / 512 + 1, 512>>>(isBreak);
+    ifContinuous<<<devInput.size / 512 + 1, 512>>>(isSpace);
+
     error = cudaGetLastError();
     std::cout << __FILE__ + std::to_string(__LINE__) + __func__  + cudaGetErrorName(error) + "\n";
 
@@ -143,13 +157,13 @@ auto getDocumentToken(array<charType> devInput) -> documentToken{
     scanSpace.size = devInput.size;
     scanBreak.size = devInput.size;
 
-    error = cudaMalloc(reinterpret_cast<void **>(&(scanSpace.ptr)), scanSpace.size * sizeof(size_t));
+    error = cudaMallocManaged(reinterpret_cast<void **>(&(scanSpace.ptr)), scanSpace.size * sizeof(size_t));
     if(error != cudaSuccess){
         std::cout << scanSpace.size  << std::endl;
         std::cout << scanSpace.size * sizeof(size_t) << std::endl;
         throw __FILE__ + std::to_string(__LINE__) + __func__  + cudaGetErrorName(error)+ "\n";
     }
-    error = cudaMalloc(reinterpret_cast<void **>(&(scanBreak.ptr)), scanBreak.size * sizeof(size_t));
+    error = cudaMallocManaged(reinterpret_cast<void **>(&(scanBreak.ptr)), scanBreak.size * sizeof(size_t));
     if(error != cudaSuccess){
         throw __FILE__ + std::to_string(__LINE__) + __func__  + cudaGetErrorName(error)+ "\n";
     }
@@ -161,22 +175,22 @@ auto getDocumentToken(array<charType> devInput) -> documentToken{
 
     array<wordAndPartOfSpeechPair> token;
     array<documentSentenceNode> document;
-    error = cudaMemcpy(&(token.size), scanSpace.ptr + scanSpace.size - 1, sizeof(size_t), cudaMemcpyDeviceToHost);
+    memcpy(&(token.size), scanSpace.ptr + scanSpace.size - 1, sizeof(size_t));
     if(error != cudaSuccess){
         throw __FILE__ + std::to_string(__LINE__) + __func__  + cudaGetErrorName(error)+ "\n";
     }
-    error = cudaMemcpy(&(document.size), scanBreak.ptr + scanBreak.size - 1, sizeof(size_t), cudaMemcpyDeviceToHost);
+    memcpy(&(document.size), scanBreak.ptr + scanBreak.size - 1, sizeof(size_t));
     if(error != cudaSuccess){
         throw __FILE__ + std::to_string(__LINE__) + __func__  + cudaGetErrorName(error)+ "\n";
     }
     token.size += 1;
     token.size /= 2;
     document.size++;
-    error = cudaMalloc(reinterpret_cast<void **>(&(token.ptr)), sizeof(wordAndPartOfSpeechPair) * token.size);
+    error = cudaMallocManaged(reinterpret_cast<void **>(&(token.ptr)), sizeof(wordAndPartOfSpeechPair) * token.size);
     if(error != cudaSuccess){
         throw __FILE__ + std::to_string(__LINE__) + __func__  + cudaGetErrorName(error)+ "\n";
     }
-    error = cudaMalloc(reinterpret_cast<void **>(&(document.ptr)), sizeof(documentSentenceNode) * document.size);
+    error = cudaMallocManaged(reinterpret_cast<void **>(&(document.ptr)), sizeof(documentSentenceNode) * document.size);
     if(error != cudaSuccess){
         throw __FILE__ + std::to_string(__LINE__) + __func__  + cudaGetErrorName(error)+ "\n";
     }

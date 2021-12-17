@@ -11,12 +11,14 @@
 #include "documentParser.cuh"
 #include "gpuStack.cuh"
 #include "device_launch_parameters.h"
+#include <set>
 
 class nToken {
 public:
     nToken(char * documentPath, char * searchQueryPath);
-    void getPosition();
+    auto getPosition() -> std::vector<array<size_t>>;
     void dumpInfo();
+    ~nToken();
 
 private:
     parseTreeInArray * expression;

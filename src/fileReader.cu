@@ -81,14 +81,14 @@ auto gpuUTF8FileReader(char * path) -> array<charType>{
 
     array<uint8_t> devBinFile;
     devBinFile.size = buffer.size();
-    error = cudaMalloc(reinterpret_cast<void**>(&(devBinFile.ptr)), sizeof(uint8_t) * buffer.size());
+    error = cudaMallocManaged(reinterpret_cast<void**>(&(devBinFile.ptr)), sizeof(uint8_t) * buffer.size());
 #ifdef OUTPUTMEMALLOCSIZE
     std::wcout << "devBinFile" << sizeof(uint8_t) * buffer.size() << std::endl;
 #endif
     if(error != cudaSuccess){
         throw __FILE__ + std::to_string(__LINE__) + __func__  + cudaGetErrorName(error)+ "\n";
     }
-    error = cudaMemcpy(devBinFile.ptr, buffer.data(), sizeof(uint8_t) * buffer.size(), cudaMemcpyHostToDevice);
+    memcpy(devBinFile.ptr, buffer.data(), sizeof(uint8_t) * buffer.size());
     if(error != cudaSuccess){
         throw __FILE__ + std::to_string(__LINE__) + __func__  + cudaGetErrorName(error)+ "\n";
     }
@@ -96,7 +96,7 @@ auto gpuUTF8FileReader(char * path) -> array<charType>{
 
     array<bool> isFirst;
     isFirst.size = buffer.size();
-    error = cudaMalloc(reinterpret_cast<void**>(&(isFirst.ptr)), sizeof(bool) * buffer.size());
+    error = cudaMallocManaged(reinterpret_cast<void**>(&(isFirst.ptr)), sizeof(bool) * buffer.size());
 #ifdef OUTPUTMEMALLOCSIZE
     std::wcout << "isFirst" << sizeof(bool) * buffer.size() << std::endl;
 #endif
@@ -107,7 +107,7 @@ auto gpuUTF8FileReader(char * path) -> array<charType>{
 
     array<size_t> scanFirst;
     scanFirst.size = buffer.size();
-    error = cudaMalloc(reinterpret_cast<void**>(&(scanFirst.ptr)), sizeof(size_t) * buffer.size());
+    error = cudaMallocManaged(reinterpret_cast<void**>(&(scanFirst.ptr)), sizeof(size_t) * buffer.size());
 #ifdef OUTPUTMEMALLOCSIZE
     std::wcout << "scanFirst" << sizeof(size_t) * buffer.size() << std::endl;
 #endif
@@ -125,11 +125,11 @@ auto gpuUTF8FileReader(char * path) -> array<charType>{
 
     std::cout << __FILE__ + std::to_string(__LINE__) + __func__  + cudaGetErrorName(error) + "\n";
     array<charType> devUnicodeFile;
-    error = cudaMemcpy(&(devUnicodeFile.size), scanFirst.ptr + scanFirst.size - 1, sizeof(size_t), cudaMemcpyDeviceToHost);
+    memcpy(&(devUnicodeFile.size), scanFirst.ptr + scanFirst.size - 1, sizeof(size_t));
     if(error != cudaSuccess){
         throw __FILE__ + std::to_string(__LINE__) + __func__  + cudaGetErrorName(error)+ "\n";
     }
-    error =  cudaMalloc(reinterpret_cast<void**>(&(devUnicodeFile.ptr)), sizeof(charType) * devUnicodeFile.size);
+    error =  cudaMallocManaged(reinterpret_cast<void**>(&(devUnicodeFile.ptr)), sizeof(charType) * devUnicodeFile.size);
 
     if(error != cudaSuccess){
 
