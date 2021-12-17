@@ -29,7 +29,7 @@ enable_testing() #enable gtest
 
 
 
-add_executable(nToken main.cu src/nToken.cu include/nToken.cuh include/operatorParser.cuh include/basicDataTypeDefine.cuh src/operatorParser.cu src/fileReader.cu include/fileReader.cuh src/documentParser.cu include/documentParser.cuh src/gpuStack.cu include/gpuStack.cuh )
+add_executable(nToken main.cu src/nToken.cu include/nToken.cuh include/operatorParser.cuh include/basicDataTypeDefine.cuh src/operatorParser.cu src/fileReader.cu include/fileReader.cuh src/documentParser.cu include/documentParser.cuh src/gpuStack.cu include/gpuStack.cuh src/nTokenGetPosition.cu src/nTokenDfsTraversalSearch.cu)
 set_property(TARGET nToken PROPERTY CUDA_STANDARD 17)
 
 target_link_libraries(nToken -lpthread)
