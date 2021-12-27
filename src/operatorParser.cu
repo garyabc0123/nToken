@@ -174,7 +174,7 @@ auto infixToPrefix(std::vector<symbolTokenStream> input) -> std::vector<symbolTo
 auto infixToPrefix(std::vector<symbolTokenStream> input) -> std::vector<symbolTokenStream>{
     std::stack<symbolTokenStream> stack;
     std::deque<symbolTokenStream> output;
-    for(size_t it = input.size() - 1; it != -1 ; it--){
+    for(size_t it = input.size() - 1;  static_cast<size_t>(it) !=  static_cast<size_t>(-1) ; it--){
         switch (input[it].type) {
             case symbolTable::curlyBracketRight:
                 stack.push(input[it]);

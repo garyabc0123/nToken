@@ -22,7 +22,8 @@ __device__ __host__ auto push(gpuStack<T> stack, size_t id, T data){
 }
 template <typename T>
 __device__ __host__ auto pop(gpuStack<T> stack, size_t id) -> T{
-    stack.top[id]--;
+    if(stack.top[id] != 0)
+        stack.top[id]--;
     return stack.ptr[stack.width * (stack.top[id] )+ id];
 }
 template <typename T>
@@ -45,5 +46,10 @@ template <typename T>
 __device__ __host__ auto isFull(gpuStack<T> stack, size_t id) -> bool{
     return stack.ptr[id] == stack.high;
 }
+
+template <typename T>
+__device__ __host__ auto get(gpuStack<T> stack, size_t id, size_t serial) -> T{
+    return stack.ptr[stack.width * serial + id];
+};
 
 #endif //NTOKEN_GPUSTACK_CUH

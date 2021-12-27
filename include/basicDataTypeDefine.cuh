@@ -13,6 +13,12 @@
 using charType = uint32_t;
 using partWordOfSpeechType = uint16_t;
 
+#ifdef __WIN32 // I hope never use it;
+#include <windows.h>
+#define wchar_t uint32_t
+#define size_t uint64_t
+
+#endif
 
 template <typename T>
 struct array{

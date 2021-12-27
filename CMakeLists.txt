@@ -6,8 +6,14 @@ set(CMAKE_CUDA_STANDARD 17) #c++ version
 
 set(GCC_VERSION 11) #gcc version(define by me)
 include_directories(/usr/include/c++/${GCC_VERSION}/ include src)
-message("include linux header")
 
+find_package(JNI)
+
+if (JNI_FOUND)
+    message (STATUS "JNI_INCLUDE_DIRS=${JNI_INCLUDE_DIRS}")
+    message (STATUS "JNI_LIBRARIES=${JNI_LIBRARIES}")
+endif()
+include_directories(${JNI_INCLUDE_DIRS})
 
 #LINUX
 if(WIN32)
@@ -26,14 +32,28 @@ endif()
 enable_testing() #enable gtest
 
 
+message("BUILD_FUNC=${BUILD_FUNC}")
+if(BUILD_FUNC MATCHES "shared")
+    add_library(nToken SHARED src/nToken.cu include/nToken.cuh include/operatorParser.cuh include/basicDataTypeDefine.cuh src/operatorParser.cu src/fileReader.cu include/fileReader.cuh src/documentParser.cu include/documentParser.cuh src/gpuStack.cu include/gpuStack.cuh src/nTokenGetPosition.cu src/nTokenDfsTraversalSearch.cu include/linkWithJava.cpp include/linkWithJava.h)
+else()
+    add_executable(nToken main.cu src/nToken.cu include/nToken.cuh include/operatorParser.cuh include/basicDataTypeDefine.cuh src/operatorParser.cu src/fileReader.cu include/fileReader.cuh src/documentParser.cu include/documentParser.cuh src/gpuStack.cu include/gpuStack.cuh src/nTokenGetPosition.cu src/nTokenDfsTraversalSearch.cu include/linkWithJava.cpp include/linkWithJava.h)
+endif()
 
 
 
-add_executable(nToken main.cu src/nToken.cu include/nToken.cuh include/operatorParser.cuh include/basicDataTypeDefine.cuh src/operatorParser.cu src/fileReader.cu include/fileReader.cuh src/documentParser.cu include/documentParser.cuh src/gpuStack.cu include/gpuStack.cuh src/nTokenGetPosition.cu src/nTokenDfsTraversalSearch.cu)
-set_property(TARGET nToken PROPERTY CUDA_STANDARD 17)
+    set_property(TARGET nToken PROPERTY CUDA_STANDARD 17)
 
 target_link_libraries(nToken -lpthread)
 
 #add_subdirectory(test) #test sub directory
-set_target_properties(nToken PROPERTIES
-        CUDA_SEPARABLE_COMPILATION ON)
+if(BUILD_FUNC MATCHES "shared")
+    set_target_properties(nToken PROPERTIES
+            CUDA_SEPARABLE_COMPILATION ON
+            VERSION     1
+            SOVERSION   1)
+else()
+    set_target_properties(nToken PROPERTIES
+            CUDA_SEPARABLE_COMPILATION ON
+            VERSION     2.5
+            SOVERSION   1)
+endif()

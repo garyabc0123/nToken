@@ -16,7 +16,10 @@
 
 auto fileReader(char * path) -> std::wstring;
 
+auto gpuUTF8Loader(std::vector<uint8_t> buffer) -> array<charType >;
+
 auto gpuUTF8FileReader(char *path)-> array<charType>;
 
+auto gpuUTF16FileReader(char *path) -> array<charType >;
 
 #endif //NTOKEN_FILEREADER_CUH

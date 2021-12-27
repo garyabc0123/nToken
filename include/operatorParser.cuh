@@ -37,15 +37,6 @@ struct symbolTokenStream{
     size_t id;
     symbolTable type;
     std::wstring str;
-    __host__ __device__ void  operator=(symbolTokenStream const &right) {
-        id = right.id;
-        type = right.type;
-        if(type == symbolTable::str){
-            str = right.str;
-        }
-        return ;
-    }
-
 
 };
 

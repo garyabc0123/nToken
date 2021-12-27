@@ -86,6 +86,8 @@ __host__ __device__ void walk(const parseTreeInArray parseTree, const documentTo
 
 __global__ void walk(parseTreeInArray parseTree, documentToken document, gpuStack<parseTreeInArrayNode> stack, array<bool> answer){
     size_t idx = threadIdx.x + blockIdx.x * blockDim.x;
+    if(idx >= document.token.size)
+        return;
     walk(parseTree, document, stack, answer, idx);
 
 }
@@ -127,24 +129,21 @@ auto nToken::getPosition() -> std::vector<array<size_t>>{
             throw __FILE__ + std::to_string(__LINE__) + __func__  + cudaGetErrorName(error)+ "\n";
         }
 
-        {
-
-
-
-            for(size_t it2 = 0 ; it2 < document.token.size + 10 ; it2++){
-                if(it2 == 327){
-                    printf("\n");
-                }
-                walk(expression[it], document, stack, ans, it2);
-            }
-
-
-        }
+//        {
+//
+//
+//
+//            for(size_t it2 = 0 ; it2 < document.token.size + 10 ; it2++){
+//                walk(expression[it], document, stack, ans, it2);
+//            }
+//
+//
+//        }
 
 
 
 
-        //walk<<<document.token.size / 512 + 1, 512>>>(expression[it], document, stack, ans);
+        walk<<<document.token.size / 512 + 1, 512>>>(expression[it], document, stack, ans);
         cudaDeviceSynchronize();
         error = cudaGetLastError();
         if(error != cudaSuccess){
@@ -157,10 +156,13 @@ auto nToken::getPosition() -> std::vector<array<size_t>>{
         array<size_t> scan;
         scan.size = ans.size;
         cudaMallocManaged(reinterpret_cast<void**>(&(scan.ptr)), sizeof(size_t) * scan.size);
-        thrust::copy(thrust::device, ans.ptr, ans.ptr + ans.size, scan.ptr);
-        thrust::exclusive_scan(thrust::device, scan.ptr, &(scan.ptr[scan.size ]), scan.ptr, static_cast<size_t>(0));
         array<size_t> compact;
-        memcpy(&(compact.size), scan.ptr + scan.size - 1, sizeof(size_t));
+        thrust::copy(thrust::device, ans.ptr, ans.ptr + ans.size, scan.ptr);
+        compact.size = thrust::count(thrust::device, scan.ptr, scan.ptr + scan.size, 1);
+        thrust::exclusive_scan(thrust::device, scan.ptr, &(scan.ptr[scan.size + 1]), scan.ptr, static_cast<size_t>(0));
+
+//        memcpy(&(compact.size), &(scan.ptr[scan.size - 1]), sizeof(size_t));
+
         error = cudaMallocManaged(reinterpret_cast<void**>(&(compact.ptr)), sizeof(size_t) * compact.size);
         if(error != cudaSuccess){
             throw __FILE__ + std::to_string(__LINE__) + __func__  + cudaGetErrorName(error)+ "\n";
@@ -172,12 +174,12 @@ auto nToken::getPosition() -> std::vector<array<size_t>>{
             throw __FILE__ + std::to_string(__LINE__) + __func__  + cudaGetErrorName(error)+ "\n";
         }
         vecAns.push_back(compact);
-        std::wcout << "select id:" << it  << " size : " << compact.size <<std::endl;
-        for(auto it2 = 0 ; it2 < compact.size ; it2++){
-            std::wcout << compact.ptr[it2] << L" ";
-
-        }
-        std::wcout << std::endl;
+//        std::wcout << "select id:" << it  << " size : " << compact.size <<std::endl;
+//        for(auto it2 = 0 ; it2 < compact.size ; it2++){
+//            std::wcout << compact.ptr[it2] << L" ";
+//
+//        }
+//        std::wcout << std::endl;
 
         cudaFree(ans.ptr);
         cudaFree(scan.ptr);

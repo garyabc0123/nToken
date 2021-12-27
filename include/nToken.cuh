@@ -13,30 +13,32 @@
 #include "device_launch_parameters.h"
 #include <set>
 
+#include "json.hpp"
+
 class nToken {
 public:
     nToken(char * documentPath, char * searchQueryPath);
+    nToken(std::vector<uint8_t> textBytes, std::wstring searchQuery);
+    void go();
     auto getPosition() -> std::vector<array<size_t>>;
     void dumpInfo();
     ~nToken();
+    array<size_t> dfsTraversalSearch (std::vector<array<size_t>> inputPosition);
+    void dumpPosition(std::string path);
 
 private:
     parseTreeInArray * expression;
     distList expressionDistList;
     size_t expressionSize;
     documentToken document;
+    std::vector<array<size_t>> position;
+    array<size_t> local;
 };
 
-//struct documentTokenPtr{
-//    wordAndPartOfSpeechPair* token;
-//    size_t tokenSize;
-//
-//    documentSentenceNode*  sentence;
-//    size_t sentenceSize;
-//
-//    charType* word;
-//    size_t wordSize;
-//};
+
+size_t __device__ __host__ findWordDeSentenceID(array<documentSentenceNode> sentence, size_t wordID);
+
+
 
 
 

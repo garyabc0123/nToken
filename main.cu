@@ -6,7 +6,8 @@ int main(int argc, char ** argv) {
     std::wcout << __cplusplus << std::endl;
     std::wcout << (__cplusplus > 201703L) << std::endl;
     try{
-        nToken(argv[1], argv[2]);
+        nToken n(argv[1], argv[2]);
+        n.go();
     } catch (std::string e) {
         std::wcout << std::wstring(e.begin(), e.end()) << std::endl;
     }
