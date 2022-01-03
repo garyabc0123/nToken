@@ -13,8 +13,6 @@
 auto lecicalAnalyzer(std::wstring input) -> std::vector<symbolTokenStream>{
 
     std::vector<symbolTokenStream> ret;
-//  std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
-//  std::wstring wStr = converter.from_bytes(input);
     std::deque<wchar_t> buffer;
     size_t id = 0;
     for (size_t it = 0; it < input.size() ; it++){
@@ -39,7 +37,10 @@ auto lecicalAnalyzer(std::wstring input) -> std::vector<symbolTokenStream>{
                     buffer.clear();
 
                 }
-                ret.push_back(symbolTokenStream{id, symbolTable::str, std::wstring(&(input[it]), 1)});
+                wchar_t ch = input.at(it);
+                ch += 0x100000;
+                ret.push_back(symbolTokenStream{id, symbolTable::str, std::wstring(1, ch)});
+                //offset to unicode "Private Use Area-B"
                 id++;
                 break;
             }
@@ -62,45 +63,46 @@ auto lecicalAnalyzer(std::wstring input) -> std::vector<symbolTokenStream>{
         ret.push_back(symbolTokenStream{id, symbolTable::str, std::wstring(buffer.begin(), buffer.end())});
     }
 
-    //TODO Classification symbol
+    //0x100000: offset symbol to Unicode Private Use Area-B
     for(auto it = ret.begin() ; it != ret.end() ; it++){
-        if(it->type == symbolTable::str && it->str.size() == 1){
-            switch (it->str[0]) {
-                case L'$':
+        if(it->type == symbolTable::str && it->str.size() == 1 && it->str.front() > 0x100000){
+            switch (it->str.front() - 0x100000) {
+                case L'$' :
                     it->type = symbolTable::dollarSign;
                     it->str.clear();
                     break;
-                case L'%':
+                case L'%' :
                     it->type = symbolTable::percentSign;
                     it->str.clear();
                     break;
-                case L'|':
+                case L'|' :
                     it->type = symbolTable::verticalBar;
                     it->str.clear();
                     break;
-                case L'!':
+                case L'!' :
                     it->type = symbolTable::exclamationMark;
                     it->str.clear();
                     break;
-                case L'^':
+                case L'^' :
                     it->type = symbolTable::caret;
                     it->str.clear();
                     break;
-                case L'[':
+                case L'[' :
                     it->type = symbolTable::squareBracketLeft;
                     it->str.clear();
                     break;
-                case L']':
+                case L']' :
                     it->type = symbolTable::squareBracketRight;
                     it->str.clear();
                     break;
-                case L'{':
+                case L'{' :
                     it->type = symbolTable::curlyBracketLeft;
                     it->str.clear();
                     break;
-                case L'}':
+                case L'}' :
                     it->type = symbolTable::curlyBracketRight;
                     it->str.clear();
+                    break;
                 default:
                     //do nothing
                     break;
@@ -334,7 +336,7 @@ auto syntaxDirectedTranslator(std::vector<symbolTokenStream> token) -> std::tupl
                     nowState = 0;
                     auto computeTree = tokenStream2TreeInArray(std::vector<symbolTokenStream>(token.begin()+curlyBegin+1, token.begin()+curlyEnd));
                     std::wstring distStr(token[squarBegin + 1].str);
-                    size_t distThis = std::stoi(distStr);
+                    size_t distThis = std::stoi(distStr) + 1;
                     dist.push_back(distThis);
                     computeTupleTree.push_back(computeTree);
                 }

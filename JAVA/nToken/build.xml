@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<project  name="ntoken"  basedir="." default="bulid_java_linux">
+    <property name="srcDir" value="src/nToken"></property>
+    <property name="cplusplusSrcDir" value="../../."></property>
+    <property name="javaBulidDir" value="classes"></property>
+    <property name="cBuildDir" value="bulid"></property>
+    <property name="jarDir" value="jar"></property>
+
+
+    <target name="clean" >
+        <delete dir="${javaBulidDir}" failonerror="false"/>
+        <delete dir="${cBuildDir}" failonerror="false"/>
+        <delete dir="${jarDir}" failonerror="false"/>
+
+    </target>
+
+    <target name="mkdir" depends="clean">
+        <mkdir dir="${javaBulidDir}"></mkdir>
+        <mkdir dir="${cBuildDir}"></mkdir>
+        <mkdir dir="${jarDir}"></mkdir>
+    </target>
+
+    <target name="compile_c++_linux" depends="mkdir">
+        <exec executable="cmake">
+            <arg value="-B${cBuildDir}"></arg>
+            <arg value="-S${cplusplusSrcDir}"></arg>
+            <arg value="-DBUILD_FUNC=shared"></arg>
+
+        </exec>
+        <exec executable="make" dir="${cBuildDir}">
+            <arg value="-j8"></arg>
+        </exec>
+
+    </target>
+
+    <target name="bulid_java_linux" depends="compile_c++_linux">
+        <javac srcdir="${srcDir}" destdir="${javaBulidDir}"/>
+        <jar destfile="${jarDir}/nToken.jar" basedir="${javaBulidDir}"  >
+            <manifest>
+                <attribute name="Main-Class" value="nToken.nToken"/>
+            </manifest>
+            <fileset file="${cBuildDir}/*.so.*"></fileset>
+        </jar>
+    </target>
+</project>

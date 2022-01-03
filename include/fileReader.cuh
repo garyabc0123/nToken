@@ -10,7 +10,7 @@
 #include <sstream>
 #include <codecvt>
 #include "basicDataTypeDefine.cuh"
-#include "thrust/scan.h"
+#include "thrust/universal_vector.h"
 #include "thrust/execution_policy.h"
 #include "device_launch_parameters.h"
 

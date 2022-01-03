@@ -10,10 +10,10 @@ extern "C" {
 /*
  * Class:     nToken_nToken
  * Method:    callNToken
- * Signature: ([B[B)[B
+ * Signature: ([B[B)[C
  */
-JNIEXPORT jbyteArray JNICALL Java_nToken_nToken_callNToken
-        (JNIEnv *, jobject, jbyteArray, jbyteArray);
+JNIEXPORT jcharArray JNICALL Java_nToken_nToken_callNToken
+  (JNIEnv *, jobject, jbyteArray, jbyteArray);
 
 #ifdef __cplusplus
 }

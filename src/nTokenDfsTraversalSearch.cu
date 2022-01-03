@@ -205,11 +205,11 @@ array<size_t> nToken::dfsTraversalSearch (std::vector<array<size_t>> inputPositi
     }
     thrust::copy(inputPosition.begin(), inputPosition.end(), devInputPosition.ptr);
 
-    for(size_t idx = 0 ; idx < devInputPosition.ptr[0].size ; idx++){
-        dfsWalker(this->document, devInputPosition, array<size_t>{.ptr=this->expressionDistList, .size = devInputPosition.size}, stack, ans, idx);
-    }
+//    for(size_t idx = 0 ; idx < devInputPosition.ptr[0].size ; idx++){
+//        dfsWalker(this->document, devInputPosition, array<size_t>{.ptr=this->expressionDistList, .size = devInputPosition.size}, stack, ans, idx);
+//    }
 
-    //dfsWalker<<<devInputPosition.ptr[0].size / 512 + 1, 512>>>(this->document, devInputPosition, array<size_t>{.ptr=this->expressionDistList, .size = devInputPosition.size}, stack, ans);
+    dfsWalker<<<devInputPosition.ptr[0].size / 512 + 1, 512>>>(this->document, devInputPosition, array<size_t>{.ptr=this->expressionDistList, .size = devInputPosition.size}, stack, ans);
     cudaDeviceSynchronize();
     error = cudaGetLastError();
 

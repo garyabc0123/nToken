@@ -5,7 +5,6 @@ set(CMAKE_CUDA_STANDARD 17) #c++ version
 #set(CMAKE_CUDA_STANDARD_REQUIRED TRUE)
 
 set(GCC_VERSION 11) #gcc version(define by me)
-include_directories(/usr/include/c++/${GCC_VERSION}/ include src)
 
 find_package(JNI)
 
@@ -13,7 +12,7 @@ if (JNI_FOUND)
     message (STATUS "JNI_INCLUDE_DIRS=${JNI_INCLUDE_DIRS}")
     message (STATUS "JNI_LIBRARIES=${JNI_LIBRARIES}")
 endif()
-include_directories(${JNI_INCLUDE_DIRS})
+include_directories(${JNI_INCLUDE_DIRS} /usr/include/c++/${GCC_VERSION}/ include src /usr/local/cuda/include)
 
 #LINUX
 if(WIN32)
@@ -34,9 +33,9 @@ enable_testing() #enable gtest
 
 message("BUILD_FUNC=${BUILD_FUNC}")
 if(BUILD_FUNC MATCHES "shared")
-    add_library(nToken SHARED src/nToken.cu include/nToken.cuh include/operatorParser.cuh include/basicDataTypeDefine.cuh src/operatorParser.cu src/fileReader.cu include/fileReader.cuh src/documentParser.cu include/documentParser.cuh src/gpuStack.cu include/gpuStack.cuh src/nTokenGetPosition.cu src/nTokenDfsTraversalSearch.cu include/linkWithJava.cpp include/linkWithJava.h)
+    add_library(nToken SHARED src/nToken.cu include/nToken.cuh include/operatorParser.cuh include/basicDataTypeDefine.cuh src/operatorParser.cu src/fileReader.cu include/fileReader.cuh src/documentParser.cu include/documentParser.cuh src/gpuStack.cu include/gpuStack.cuh src/nTokenGetPosition.cu src/nTokenDfsTraversalSearch.cu src/linkWithJava.cpp include/linkWithJava.h)
 else()
-    add_executable(nToken main.cu src/nToken.cu include/nToken.cuh include/operatorParser.cuh include/basicDataTypeDefine.cuh src/operatorParser.cu src/fileReader.cu include/fileReader.cuh src/documentParser.cu include/documentParser.cuh src/gpuStack.cu include/gpuStack.cuh src/nTokenGetPosition.cu src/nTokenDfsTraversalSearch.cu include/linkWithJava.cpp include/linkWithJava.h)
+    add_executable(nToken main.cu src/nToken.cu include/nToken.cuh include/operatorParser.cuh include/basicDataTypeDefine.cuh src/operatorParser.cu src/fileReader.cu include/fileReader.cuh src/documentParser.cu include/documentParser.cuh src/gpuStack.cu include/gpuStack.cuh src/nTokenGetPosition.cu src/nTokenDfsTraversalSearch.cu src/linkWithJava.cpp include/linkWithJava.h)
 endif()
 
 

@@ -7,10 +7,10 @@
 
 #include "basicDataTypeDefine.cuh"
 #include "operatorParser.cuh"
-#include "fileReader.cuh"
 #include "documentParser.cuh"
-#include "gpuStack.cuh"
 #include "device_launch_parameters.h"
+#include "fileReader.cuh"
+#include "gpuStack.cuh"
 #include <set>
 
 #include "json.hpp"
@@ -25,6 +25,7 @@ public:
     ~nToken();
     array<size_t> dfsTraversalSearch (std::vector<array<size_t>> inputPosition);
     void dumpPosition(std::string path);
+    std::string getJSON();
 
 private:
     parseTreeInArray * expression;

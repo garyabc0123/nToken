@@ -6,6 +6,7 @@
 
 
 
+
 nToken::nToken(char * documentPath, char * searchQueryPath){
     cudaSetDevice(0);
     //prepare data
@@ -220,4 +221,59 @@ nToken::~nToken(){
         cudaFree(it->ptr);
     }
 
+}
+
+std::string nToken::getJSON() {
+    nlohmann::json json;
+
+    {
+
+        //json["position"] = nlohmann::j
+        for(size_t oldIt = 0 ; oldIt != position.size() ; oldIt++){
+            json["position"].push_back(nlohmann::json());
+            json["position"].back()["phraseID"] = oldIt;
+            size_t sentenceID = -1;
+            for(size_t it = 0 ; it < position[oldIt].size ; it++){
+                auto oldSentenceID = sentenceID;
+                sentenceID = findWordDeSentenceID(document.sentence, position[oldIt].ptr[it]);
+                if(sentenceID != oldSentenceID){
+                    json["position"].back()["data"].push_back(nlohmann::json());
+                    json["position"].back()["data"].back()["sentenceID"] = sentenceID;
+
+                }
+                json["position"].back()["data"].back()["data"].push_back(position[oldIt].ptr[it]);
+
+            }
+        }
+    }
+    {
+
+        size_t sentenceID = -1;
+        for(size_t it = 0 ; it < local.size ; it++){
+            if(local.ptr[it] != -1){
+                if(it % position.size() == 0){
+                    auto oldSentenceID = sentenceID;
+                    sentenceID = findWordDeSentenceID(document.sentence, local.ptr[it]);
+                    if(oldSentenceID != sentenceID){
+                        //json["answer"].push_back(ansType{.sentenceID = sentenceID, .ansList = std::vector<std::vector<size_t>>()});
+                        json["answer"].push_back(nlohmann::json());
+                        json["answer"].back()["sentenceID"] = sentenceID;
+                    }
+                    json["answer"].back()["data"].push_back(std::vector<size_t>());
+
+                }
+                //newAns.back().ansList.back().push_back(local.ptr[it]);
+                json["answer"].back()["data"].back().push_back(local.ptr[it]);
+                //newAns[std::to_string(sentenceID)].back().push_back(local.ptr[it]);
+            }
+
+        }
+
+
+
+    }
+
+    std::string temp = json.dump();
+
+    return  temp;
 }

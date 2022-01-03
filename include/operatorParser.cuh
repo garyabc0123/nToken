@@ -15,6 +15,9 @@
 #include <algorithm>
 #include <iostream>
 #include <map>
+#include "device_launch_parameters.h"
+
+
 enum struct symbolTable{
     null,
     dollarSign,
